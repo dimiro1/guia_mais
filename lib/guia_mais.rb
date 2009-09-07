@@ -28,7 +28,7 @@ end
 module GuiaMais
   class Cliente
     attr_reader :nome, :endereco, :bairro, :cep, :categoria
-    def initialize(nome, endereco, bairro, categoria, cep)
+    def initialize(nome, endereco, bairro, cep, categoria)
       @nome = nome
       @endereco = endereco
       @bairro = bairro
@@ -106,7 +106,7 @@ module GuiaMais
           categoria = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelCategory>span.CmpInf")
         end
       rescue TimeoutError
-        raise CorreiosException.new, 'Servidor do correio fora do ar'
+        raise CorreiosException.new, 'GuiaMais fora do ar'
       end
       return Cliente.new(nome, endereco, bairro, cep, categoria)
     end
