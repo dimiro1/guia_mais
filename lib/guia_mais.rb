@@ -26,6 +26,9 @@ class String
 end
 
 module GuiaMais
+  class GuiaMaisException < Exception
+  end
+
   class Cliente
     attr_reader :nome, :endereco, :bairro, :cep, :categoria
     def initialize(nome, endereco, bairro, cep, categoria)
@@ -87,7 +90,7 @@ module GuiaMais
     def self.iniciar(telefone, options = {})
       options[:txb] = telefone
       options[:nes] ||= nil
-      options[:ies] ||= ESTADOS[options[:nes]][:guia]
+      options[:ies] ||= ESTADOS[options[:nes]][:guia] if options[:nes]
       response = Net::HTTP.get_response(URI.parse(@@url), options)
       minerar_dados(response.body)
     end
@@ -99,14 +102,17 @@ module GuiaMais
       nome, endereco, bairro, cep, categoria = nil
       begin
         timeout(10) do
-          nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtTitleBlack")
+          nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtT")
+          unless name
+            nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtTitleBlack")
+          end
           endereco = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divAddress>span.CmpInf")
           bairro = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divNeighborHood>span.CmpInf")
           cep = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divCEP>span.CmpInf")
           categoria = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelCategory>span.CmpInf")
         end
       rescue TimeoutError
-        raise CorreiosException.new, 'GuiaMais fora do ar'
+        raise GuiaMaisException.new, 'GuiaMais fora do ar'
       end
       return Cliente.new(nome, endereco, bairro, cep, categoria)
     end
@@ -114,6 +120,6 @@ module GuiaMais
 end
 
 if __FILE__ == $0
-  cliente = GuiaMais::Minerador.iniciar(32222222, :nes => :piaui)
+  cliente = GuiaMais::Minerador.iniciar(32222222)
   p cliente
 end
