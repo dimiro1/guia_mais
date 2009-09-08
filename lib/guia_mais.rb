@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+
+# -*- coding: utf-8 -*-
 # TODO: correção de erros
 require "rubygems"
 require "hpricot"
@@ -73,8 +75,7 @@ module GuiaMais
   class Selector
     attr_reader :source
     def initialize(source)
-      @source = Hpricot(open(source))
-      @source = @source.to_utf8
+      @source = Hpricot(source.to_utf8)
     end
 
     def fetch(selector)
@@ -89,9 +90,13 @@ module GuiaMais
 
     def self.iniciar(telefone, options = {})
       options[:txb] = telefone
-      options[:nes] ||= nil
-      options[:ies] ||= ESTADOS[options[:nes]][:guia] if options[:nes]
-      response = Net::HTTP.get_response(URI.parse(@@url), options)
+      options[:nes] ||= ESTADOS[options[:estado]][:sigla] if options[:estado]
+      options[:ies] ||= ESTADOS[options[:estado]][:guia] if options[:estado]
+      options.delete(:estado)
+      query = "?"
+      options.each {|param| query += "#{param[0]}=#{param[1]}&"}
+      query = query.slice(0...query.length - 1)
+      response = Net::HTTP.get_response(URI.parse(@@url + query))
       minerar_dados(response.body)
     end
 
@@ -103,9 +108,13 @@ module GuiaMais
       begin
         timeout(10) do
           nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtT")
-          unless name
+          unless nome
             nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtTitleBlack")
           end
+          unless nome
+            nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle a.txtT")
+          end
+
           endereco = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divAddress>span.CmpInf")
           bairro = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divNeighborHood>span.CmpInf")
           cep = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divCEP>span.CmpInf")
@@ -120,6 +129,6 @@ module GuiaMais
 end
 
 if __FILE__ == $0
-  cliente = GuiaMais::Minerador.iniciar(32222222)
+  cliente = GuiaMais::Minerador.iniciar(32325151, :estado => :piaui)
   p cliente
 end
