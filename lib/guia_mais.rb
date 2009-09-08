@@ -88,9 +88,13 @@ module GuiaMais
     @@url = "http://www.guiamais.com.br/Results.aspx"
     @@source = String.new
 
-    def self.iniciar(telefone, options = {})
+    def self.iniciar(oque, options = {})
       query_options = {}
-      query_options[:txb] = telefone
+      query_options[:txb] = oque
+      query_options[:idi] = options[:idi] if options[:idi]
+      query_options[:ipa] = options[:ipa] if options[:ipa]
+      query_options[:shr] = options[:shr] if options[:shr]
+      query_options[:nci] = options[:nci] if options[:nci]
       query_options[:nes] ||= ESTADOS[options[:estado]][:sigla] if options[:estado]
       query_options[:ies] ||= ESTADOS[options[:estado]][:guia] if options[:estado]
       query = "?"
@@ -126,9 +130,4 @@ module GuiaMais
       return Cliente.new(nome, endereco, bairro, cep, categoria)
     end
   end
-end
-
-if __FILE__ == $0
-  cliente = GuiaMais::Minerador.iniciar(32325151, :estado => :piaui)
-  p cliente
 end
