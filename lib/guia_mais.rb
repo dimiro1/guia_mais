@@ -89,12 +89,12 @@ module GuiaMais
     @@source = String.new
 
     def self.iniciar(telefone, options = {})
-      options[:txb] = telefone
-      options[:nes] ||= ESTADOS[options[:estado]][:sigla] if options[:estado]
-      options[:ies] ||= ESTADOS[options[:estado]][:guia] if options[:estado]
-      options.delete(:estado)
+      query_options = {}
+      query_options[:txb] = telefone
+      query_options[:nes] ||= ESTADOS[options[:estado]][:sigla] if options[:estado]
+      query_options[:ies] ||= ESTADOS[options[:estado]][:guia] if options[:estado]
       query = "?"
-      options.each {|param| query += "#{param[0]}=#{param[1]}&"}
+      query_options.each {|param| query += "#{param[0]}=#{param[1]}&"}
       query = query.slice(0...query.length - 1)
       response = Net::HTTP.get_response(URI.parse(@@url + query))
       minerar_dados(response.body)
