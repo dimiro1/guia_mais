@@ -6,6 +6,7 @@ require "rubygems"
 require "hpricot"
 require 'open-uri'
 require 'net/http'
+require 'cgi'
 require 'timeout'
 
 class String
@@ -24,6 +25,15 @@ class String
       end
     end
     array_enc.pack('C*')
+  end
+end
+
+module Net
+  class HTTP
+    def self.http_get(domain,path,params)
+      return Net::HTTP.get_response(URI.parse(domain + "#{path}?".concat(params.collect { |k,v| "#{k}=#{CGI::escape(v.to_s)}" }.reverse.join('&')))) if not params.nil?
+      return Net::HTTP.get_response(UTI.parse(domain + path))
+    end
   end
 end
 
@@ -85,8 +95,10 @@ module GuiaMais
   end
 
   class Minerador
-    @@url = "http://www.guiamais.com.br/Results.aspx"
+    @@url = "http://www.guiamais.com.br"
+    @@path = "/Results.aspx"
     @@source = String.new
+
 
     def self.iniciar(oque, options = {})
       query_options = {}
@@ -97,10 +109,8 @@ module GuiaMais
       query_options[:nci] = options[:nci] if options[:nci]
       query_options[:nes] ||= ESTADOS[options[:estado]][:sigla] if options[:estado]
       query_options[:ies] ||= ESTADOS[options[:estado]][:guia] if options[:estado]
-      query = "?"
-      query_options.each {|param| query += "#{param[0]}=#{param[1]}&"}
-      query = query.slice(0...query.length - 1)
-      response = Net::HTTP.get_response(URI.parse(@@url + query))
+
+      response = Net::HTTP.http_get(@@url, @@path, query_options)
       minerar_dados(response.body)
     end
 
