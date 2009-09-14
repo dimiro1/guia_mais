@@ -1,55 +1,17 @@
 # -*- coding: utf-8 -*-
-
-# -*- coding: utf-8 -*-
-# TODO: correção de erros
 require "rubygems"
+require "httparty"
 require "hpricot"
-require 'open-uri'
-require 'net/http'
-require 'cgi'
-require 'timeout'
+require "timeout"
 
 class String
   def to_utf8
     unpack("C*").pack("U*")
   end
-
-  def to_iso88591
-    array_utf8 = self.unpack('U*')
-    array_enc = []
-    array_utf8.each do |num|
-      if num <= 0xFF
-        array_enc << num
-      else
-        array_enc.concat "&\#\#{num};".unpack('C*')
-      end
-    end
-    array_enc.pack('C*')
-  end
-end
-
-module Net
-  class HTTP
-    def self.http_get(domain,path,params)
-      return Net::HTTP.get_response(URI.parse(domain + "#{path}?".concat(params.collect { |k,v| "#{k}=#{CGI::escape(v.to_s)}" }.reverse.join('&')))) if not params.nil?
-      return Net::HTTP.get_response(UTI.parse(domain + path))
-    end
-  end
 end
 
 module GuiaMais
   class GuiaMaisException < Exception
-  end
-
-  class Cliente
-    attr_reader :nome, :endereco, :bairro, :cep, :categoria
-    def initialize(nome, endereco, bairro, cep, categoria)
-      @nome = nome
-      @endereco = endereco
-      @bairro = bairro
-      @cep = cep
-      @categoria = categoria
-    end
   end
 
   ESTADOS = {
@@ -81,63 +43,61 @@ module GuiaMais
     :sao_paulo           => {:guia => 336, :sigla => 'SP'},
     :tocantins           => {:guia => 595, :sigla => 'TO'}
   }
-  
-  class Selector
-    attr_reader :source
-    def initialize(source)
-      @source = Hpricot(source.to_utf8)
-    end
 
-    def fetch(selector)
-      result = @source.search(selector).first
-      result ? result.inner_html : nil
+  class Cliente
+    attr_reader :nome, :endereco, :bairro, :cep, :categoria
+    def initialize(nome, endereco, bairro, cep, categoria)
+      @nome = nome
+      @endereco = endereco
+      @bairro = bairro
+      @cep = cep
+      @categoria = categoria
     end
   end
 
   class Minerador
-    @@url = "http://www.guiamais.com.br"
-    @@path = "/Results.aspx"
-    @@source = String.new
+    include HTTParty
+    base_uri "http://www.guiamais.com.br"
+    @@pagina = ""
 
-
-    def self.iniciar(oque, options = {})
-      query_options = {}
-      query_options[:txb] = oque
-      query_options[:idi] = options[:idi] if options[:idi]
-      query_options[:ipa] = options[:ipa] if options[:ipa]
-      query_options[:shr] = options[:shr] if options[:shr]
-      query_options[:nci] = options[:nci] if options[:nci]
-      query_options[:nes] ||= ESTADOS[options[:estado]][:sigla] if options[:estado]
-      query_options[:ies] ||= ESTADOS[options[:estado]][:guia] if options[:estado]
-
-      response = Net::HTTP.http_get(@@url, @@path, query_options)
-      minerar_dados(response.body)
+    def self.buscar(oque, query = {})
+      query[:txb] = oque
+      query[:nes] ||= ESTADOS[query[:estado]][:sigla] if query[:estado]
+      query[:ies] ||= ESTADOS[query[:estado]][:guia] if query[:estado]
+      query.delete(:estado)
+      resultado = get("/Results.aspx", :query => query)
+      @@pagina = Hpricot(resultado.body.to_utf8)
+      minerar_dados
     end
 
     private
-
-    def self.minerar_dados(source)
-      selector = Selector.new(source)
+    def self.buscar_elemento(elemento)
+      resultado = @@pagina.search(elemento).first
+      resultado ? resultado.inner_html : nil
+    end
+    
+    def self.minerar_dados
       nome, endereco, bairro, cep, categoria = nil
       begin
         timeout(10) do
-          nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtT")
+          nome = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtT")
           unless nome
-            nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtTitleBlack")
+            nome = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtTitleBlack")
           end
           unless nome
-            nome = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTittle a.txtT")
+            nome = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTittle a.txtT")
           end
 
-          endereco = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divAddress>span.CmpInf")
-          bairro = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divNeighborHood>span.CmpInf")
-          cep = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divCEP>span.CmpInf")
-          categoria = selector.fetch("div#ctl00_C1_RR_ctl00_lst_oPanelCategory>span.CmpInf")
+          endereco = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divAddress>span.CmpInf")
+          bairro = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divNeighborHood>span.CmpInf")
+          cep = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divCEP>span.CmpInf")
+          categoria = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelCategory>span.CmpInf")
         end
       rescue TimeoutError
         raise GuiaMaisException.new, 'GuiaMais fora do ar'
       end
       return Cliente.new(nome, endereco, bairro, cep, categoria)
     end
+
   end
 end

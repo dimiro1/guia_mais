@@ -4,7 +4,7 @@ require "test/unit"
 
 class GuiaMaisTest < Test::Unit::TestCase
   def test_se_funciona_com_32222222_RN
-    cliente = GuiaMais::Minerador.iniciar("32222222", :estado => :rio_grande_do_norte)
+    cliente = GuiaMais::Minerador.buscar("32222222", :estado => :rio_grande_do_norte)
     assert_equal cliente.nome, "MED DIET DROGARIA"
     assert_equal cliente.endereco, "AVENIDA AFONSO PENA 939 "
     assert_equal cliente.bairro, "TIROL"
@@ -13,7 +13,7 @@ class GuiaMaisTest < Test::Unit::TestCase
   end
 
   def test_se_funciona_com_32222222_PI
-    cliente = GuiaMais::Minerador.iniciar("32222222", :estado => :piaui)
+    cliente = GuiaMais::Minerador.buscar("32222222", :estado => :piaui)
     assert_equal cliente.nome, "RÁDIO TAXI"
     assert_equal cliente.endereco, "R Álvaro Ferreira, 60 Monte Castelo"
     assert_equal cliente.bairro, "Monte Castelo"
@@ -22,7 +22,7 @@ class GuiaMaisTest < Test::Unit::TestCase
   end
 
   def test_se_funciona_com_32222222_AP
-    cliente = GuiaMais::Minerador.iniciar("32222222", :estado => :amapa)
+    cliente = GuiaMais::Minerador.buscar("32222222", :estado => :amapa)
     assert_equal cliente.nome, "ELDORADO VEÍCULOS"
     assert_equal cliente.endereco, "Rod Br-156 km 3 Boné Azul"
     assert_equal cliente.bairro, "Lotm Açaí"
@@ -31,7 +31,7 @@ class GuiaMaisTest < Test::Unit::TestCase
   end
 
   def test_se_funciona_com_32325151_PI
-    cliente = GuiaMais::Minerador.iniciar("32325151", :estado => :piaui)
+    cliente = GuiaMais::Minerador.buscar("32325151", :estado => :piaui)
     assert_equal cliente.nome, "ARTTE DOS PÉS"
     assert_equal cliente.endereco, "Av Dom Severino, 1065"
     assert_equal cliente.bairro, "Fátima"
@@ -40,7 +40,7 @@ class GuiaMaisTest < Test::Unit::TestCase
   end
 
   def test_se_funciona_com_32321311_PI
-    cliente = GuiaMais::Minerador.iniciar("32321311", :estado => :piaui)
+    cliente = GuiaMais::Minerador.buscar("32321311", :estado => :piaui)
     assert_equal cliente.nome, "ALEMANHA VEICULOS"
     assert_equal cliente.endereco, "AVENIDA JOAO XXIII 3480 "
     assert_equal cliente.bairro, "NOIVOS"

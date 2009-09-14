@@ -1,0 +1,15 @@
+GuiaMais v0.1
+
+Busca endereços no site guiamais.com.br através de mineração de dados.
+
+Exemplo:
+
+require 'rubygems'
+require 'guia_mais'
+
+cliente = GuiaMais::Minerador.buscar("32222222", :estado => :piaui)
+puts cliente.nome #=> RÁDIO TAXI
+puts cliente.endereco #=> R Álvaro Ferreira, 60 Monte Castelo
+puts cliente.bairro #=> Monte Castelo
+puts cliente.cep #=> 64017-380
+puts cliente.categoria #=> Táxi
