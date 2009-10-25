@@ -53,6 +53,11 @@ module GuiaMais
       @cep = cep
       @categoria = categoria
     end
+
+    def self.buscar(oque, params)
+      Minerador.buscar(oque, params)
+    end
+
   end
 
   class Minerador
@@ -71,6 +76,7 @@ module GuiaMais
     end
 
     private
+
     def self.buscar_elemento(elemento)
       resultado = @@pagina.search(elemento).first
       resultado ? resultado.inner_html : nil
