@@ -7,7 +7,7 @@ Exemplo:
 require 'rubygems'
 require 'guia_mais'
 
-cliente = GuiaMais::Minerador.buscar("32222222", :estado => :piaui)
+cliente = Cliente.buscar("32222222", :piaui)
 puts cliente.nome #=> RÁDIO TAXI
 puts cliente.endereco #=> R Álvaro Ferreira, 60 Monte Castelo
 puts cliente.bairro #=> Monte Castelo
