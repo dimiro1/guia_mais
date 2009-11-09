@@ -45,9 +45,10 @@ module GuiaMais
   }
 
   class Cliente
-    attr_reader :nome, :endereco, :bairro, :cep, :categoria
-    def initialize(nome, endereco, bairro, cep, categoria)
+    attr_reader :nome, :telefone, :endereco, :bairro, :cep, :categoria
+    def initialize(nome, telefone, endereco, bairro, cep, categoria)
       @nome = nome
+      @telefone = telefone
       @endereco = endereco
       @bairro = bairro
       @cep = cep
@@ -64,12 +65,14 @@ module GuiaMais
     include HTTParty
     base_uri "http://www.guiamais.com.br"
     @@pagina = ""
+    @@query = {}
 
     def self.buscar(oque, query = {})
       query[:txb] = oque
       query[:nes] ||= ESTADOS[query[:estado]][:sigla] if query[:estado]
       query[:ies] ||= ESTADOS[query[:estado]][:guia] if query[:estado]
       query.delete(:estado)
+      @@query = query
       resultado = get("/Results.aspx", :query => query)
       @@pagina = Hpricot(resultado.body.to_utf8)
       minerar_dados
@@ -102,7 +105,7 @@ module GuiaMais
       rescue TimeoutError
         raise GuiaMaisException.new, 'GuiaMais fora do ar'
       end
-      return Cliente.new(nome, endereco, bairro, cep, categoria)
+      return Cliente.new(nome, @@query[:txb], endereco, bairro, cep, categoria)
     end
 
   end
