@@ -3,7 +3,7 @@ require "rubygems"
 require "rake"
 require "echoe"
 
-Echoe.new("guia_mais", "0.1") do |p|
+Echoe.new("guia_mais", "0.2") do |p|
   p.description = "Busca dados no site Guia Mais através do telefone"
   p.author = "Claudemiro Alves Feitosa Neto"
   p.email = "dimiro1@gmail.com"
