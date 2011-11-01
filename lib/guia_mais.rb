@@ -136,7 +136,7 @@ module GuiaMais
       rescue TimeoutError
         raise GuiaMaisException.new, 'GuiaMais fora do ar'
       end
-      return Cliente.new(nome, @@query[:txb], endereco, bairro, cep, categoria)
+      return Cliente.new(nome, oque, endereco, bairro, cep, categoria)
     end
 
   end
