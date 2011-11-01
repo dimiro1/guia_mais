@@ -4,6 +4,7 @@ require "rake"
 require "echoe"
 
 Echoe.new("guia_mais", "0.3") do |p|
+  p.project = "https://rubygems.org/gems/guia_mais"
   p.description = "Busca dados no site Guia Mais através do telefone"
   p.author = "Claudemiro Alves Feitosa Neto"
   p.email = "dimiro1@gmail.com"
