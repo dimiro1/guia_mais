@@ -91,13 +91,13 @@ module GuiaMais
     base_uri "http://www.guiamais.com.br"
     headers 'User-Agent' => USER_AGENTS.shuffle[0]
     @@pagina = ""
-    @@query = {}
+    @@oque = ""
 
-    def self.buscar(oque, query = {})
-      estado = ESTADOS[query[:estado]][:sigla] if query[:estado] || ""
-      @@query = query
+    def self.buscar(oque, params = {})
+      estado = ESTADOS[params[:estado]][:sigla] if params[:estado] || ""
       resultado = get("/busca/#{CGI.escapeHTML(oque)}-#{estado}")
       @@pagina = Hpricot(resultado.body.to_utf8)
+      @@oque = oque
       minerar_dados
     end
 
@@ -136,7 +136,7 @@ module GuiaMais
       rescue TimeoutError
         raise GuiaMaisException.new, 'GuiaMais fora do ar'
       end
-      return Cliente.new(nome, oque, endereco, bairro, cep, categoria)
+      return Cliente.new(nome, @@oque, endereco, bairro, cep, categoria)
     end
 
   end
