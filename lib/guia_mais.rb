@@ -3,6 +3,9 @@ require "rubygems"
 require "httparty"
 require "hpricot"
 require "timeout"
+require "htmlentities"
+require "iconv"
+require "cgi"
 
 class String
   def to_utf8
@@ -14,34 +17,56 @@ module GuiaMais
   class GuiaMaisException < Exception
   end
 
+  # We have to pass a valid UerAgent
+  USER_AGENTS = [
+                 "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0)",
+                 "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US) AppleWebKit/534.14 (KHTML, like Gecko) Chrome/10.0.603.3 Safari/534.14",
+                 "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.2; OfficeLiveConnector.1.3; OfficeLivePatch.0.0)",
+                 "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0; FunWebProducts; BOIE9;PTBR)",
+                 "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 5.1; Trident/4.0; GTB7.1; InfoPath.2; .NET CLR 2.0.50727; OfficeLiveConnector.1.3; OfficeLivePatch.0.0; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729; BRI/2)",
+                 "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/535.2 (KHTML, like Gecko) Chrome/15.0.874.106 Safari/535.2",
+                 "Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1",
+                 "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/534.26+ (KHTML, like Gecko) Version/5.0 Safari/534.26+",
+                 "Opera/9.80 (X11; Linux x86_64; U; pt-BR) Presto/2.9.168 Version/11.51",
+                 "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; pt-br) AppleWebKit/533.21.1 (KHTML, like Gecko) Safari/522.0",
+                 "Mozilla/5.0 (X11; U; Linux i686; pt-br) AppleWebKit/531.2+ (KHTML, like Gecko) Version/5.0 Safari/531.2+",
+                 "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; .NET CLR 2.0.50727; .NET CLR 3.0.4506.2152; .NET CLR 3.5.30729)",
+                 "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; pt-br) AppleWebKit/533.21.1 (KHTML, like Gecko)",
+                 "Mozilla/5.0 (Windows NT 6.0; WOW64; rv:8.0) Gecko/20100101 Firefox/8.0",
+                 "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)",
+                 "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)",
+                 "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; InfoPath.2; .NET4.0C; AskTbATU3/5.13.1.18107)",
+                 "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; InfoPath.2)"
+                ]
+
   ESTADOS = {
-    :acre                => {:guia => 579, :sigla => 'AC'},
-    :alagoas             => {:guia => 580, :sigla => 'AL'},
-    :amazonas            => {:guia => 325, :sigla => 'AM'},
-    :amapa               => {:guia => 581, :sigla => 'AP'},
-    :bahia               => {:guia => 326, :sigla => 'BA'},
-    :ceara               => {:guia => 582, :sigla => 'CE'},
-    :distrito_federal    => {:guia => 327, :sigla => 'DF'},
-    :espirito_santo      => {:guia => 328, :sigla => 'ES'},
-    :goias               => {:guia => 329, :sigla => 'GO'},
-    :maranhao            => {:guia => 584, :sigla => 'MA'},
-    :minas_gerais        => {:guia => 585, :sigla => 'MG'},
-    :mato_grosso_do_sul  => {:guia => 586, :sigla => 'MS'},
-    :mato_grosso         => {:guia => 587, :sigla => 'MT'},
-    :para                => {:guia => 330, :sigla => 'PA'},
-    :paraiba             => {:guia => 588, :sigla => 'PB'},
-    :pernambuco          => {:guia => 589, :sigla => 'PE'},
-    :piaui               => {:guia => 590, :sigla => 'PI'},
-    :parana              => {:guia => 331, :sigla => 'PR'},
-    :rio_de_janeiro      => {:guia => 333, :sigla => 'RJ'},
-    :rio_grande_do_norte => {:guia => 591, :sigla => 'RN'},
-    :rondonia            => {:guia => 592, :sigla => 'RO'},
-    :roraima             => {:guia => 593, :sigla => 'RR'},
-    :rio_grande_do_sul   => {:guia => 334, :sigla => 'RS'},
-    :santa_catarina      => {:guia => 335, :sigla => 'SC'},
-    :sergipe             => {:guia => 594, :sigla => 'SE'},
-    :sao_paulo           => {:guia => 336, :sigla => 'SP'},
-    :tocantins           => {:guia => 595, :sigla => 'TO'}
+    :acre                => {:sigla => 'AC'},
+    :alagoas             => {:sigla => 'AL'},
+    :amazonas            => {:sigla => 'AM'},
+    :amapa               => {:sigla => 'AP'},
+    :bahia               => {:sigla => 'BA'},
+    :ceara               => {:sigla => 'CE'},
+    :distrito_federal    => {:sigla => 'DF'},
+    :espirito_santo      => {:sigla => 'ES'},
+    :goias               => {:sigla => 'GO'},
+    :maranhao            => {:sigla => 'MA'},
+    :minas_gerais        => {:sigla => 'MG'},
+    :mato_grosso_do_sul  => {:sigla => 'MS'},
+    :mato_grosso         => {:sigla => 'MT'},
+    :para                => {:sigla => 'PA'},
+    :paraiba             => {:sigla => 'PB'},
+    :pernambuco          => {:sigla => 'PE'},
+    :piaui               => {:sigla => 'PI'},
+    :parana              => {:sigla => 'PR'},
+    :rio_de_janeiro      => {:sigla => 'RJ'},
+    :rio_grande_do_norte => {:sigla => 'RN'},
+    :rondonia            => {:sigla => 'RO'},
+    :roraima             => {:sigla => 'RR'},
+    :rio_grande_do_sul   => {:sigla => 'RS'},
+    :santa_catarina      => {:sigla => 'SC'},
+    :sergipe             => {:sigla => 'SE'},
+    :sao_paulo           => {:sigla => 'SP'},
+    :tocantins           => {:sigla => 'TO'}
   }
 
   class Cliente
@@ -64,16 +89,14 @@ module GuiaMais
   class Minerador
     include HTTParty
     base_uri "http://www.guiamais.com.br"
+    headers 'User-Agent' => USER_AGENTS.shuffle[0]
     @@pagina = ""
     @@query = {}
 
     def self.buscar(oque, query = {})
-      query[:txb] = oque
-      query[:nes] ||= ESTADOS[query[:estado]][:sigla] if query[:estado]
-      query[:ies] ||= ESTADOS[query[:estado]][:guia] if query[:estado]
-      query.delete(:estado)
+      estado = ESTADOS[query[:estado]][:sigla] if query[:estado] || ""
       @@query = query
-      resultado = get("/Results.aspx", :query => query)
+      resultado = get("/busca/#{CGI.escapeHTML(oque)}-#{estado}")
       @@pagina = Hpricot(resultado.body.to_utf8)
       minerar_dados
     end
@@ -89,18 +112,26 @@ module GuiaMais
       nome, endereco, bairro, cep, categoria = nil
       begin
         timeout(10) do
-          nome = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtT")
-          unless nome
-            nome = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTittle span.txtTitleBlack")
-          end
-          unless nome
-            nome = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTittle a.txtT")
-          end
+          nome = buscar_elemento("html/body/div[1]/div/div/div[3]/div[1]/div[1]/div[3]/div[2]/h2/a")
+          endereco = buscar_elemento("html/body/div[1]/div/div/div[3]/div[1]/div[1]/div[3]/div[2]/p[1]")
 
-          endereco = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divAddress>span.CmpInf")
-          bairro = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divNeighborHood>span.CmpInf")
-          cep = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelTitleCat+div div.divCEP>span.CmpInf")
-          categoria = buscar_elemento("div#ctl00_C1_RR_ctl00_lst_oPanelCategory>span.CmpInf")
+          unless endereco.nil?
+            cep = endereco.slice(endereco.index("CEP:"), endereco.length)
+            cep = cep.slice(5, cep.index("<br"))
+            cep = cep.slice(0, 9)
+
+            endereco = endereco.slice(0, endereco.index("<br />"))
+
+            bairro = endereco.slice(endereco.index(" - "), endereco.length)
+            endereco = endereco.slice(0, endereco.index(" - "))
+            bairro = bairro.slice(3, bairro.length)
+          end
+          categoria = buscar_elemento("html/body/div[1]/div/div/div[3]/div[1]/div[1]/div[3]/div[2]/p[2]/b")
+
+          nome = HTMLEntities.new.decode(nome)
+          endereco = HTMLEntities.new.decode(endereco)
+          bairro = HTMLEntities.new.decode(bairro)
+          categoria = Iconv.conv("ISO-8859-1", "UTF-8", categoria)
         end
       rescue TimeoutError
         raise GuiaMaisException.new, 'GuiaMais fora do ar'
