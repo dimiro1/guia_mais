@@ -40,33 +40,33 @@ module GuiaMais
                 ]
 
   ESTADOS = {
-    :acre                => {:sigla => 'AC'},
-    :alagoas             => {:sigla => 'AL'},
-    :amazonas            => {:sigla => 'AM'},
-    :amapa               => {:sigla => 'AP'},
-    :bahia               => {:sigla => 'BA'},
-    :ceara               => {:sigla => 'CE'},
-    :distrito_federal    => {:sigla => 'DF'},
-    :espirito_santo      => {:sigla => 'ES'},
-    :goias               => {:sigla => 'GO'},
-    :maranhao            => {:sigla => 'MA'},
-    :minas_gerais        => {:sigla => 'MG'},
-    :mato_grosso_do_sul  => {:sigla => 'MS'},
-    :mato_grosso         => {:sigla => 'MT'},
-    :para                => {:sigla => 'PA'},
-    :paraiba             => {:sigla => 'PB'},
-    :pernambuco          => {:sigla => 'PE'},
-    :piaui               => {:sigla => 'PI'},
-    :parana              => {:sigla => 'PR'},
-    :rio_de_janeiro      => {:sigla => 'RJ'},
-    :rio_grande_do_norte => {:sigla => 'RN'},
-    :rondonia            => {:sigla => 'RO'},
-    :roraima             => {:sigla => 'RR'},
-    :rio_grande_do_sul   => {:sigla => 'RS'},
-    :santa_catarina      => {:sigla => 'SC'},
-    :sergipe             => {:sigla => 'SE'},
-    :sao_paulo           => {:sigla => 'SP'},
-    :tocantins           => {:sigla => 'TO'}
+    :acre                => {:sigla => 'ac'},
+    :alagoas             => {:sigla => 'al'},
+    :amazonas            => {:sigla => 'am'},
+    :amapa               => {:sigla => 'ap'},
+    :bahia               => {:sigla => 'ba'},
+    :ceara               => {:sigla => 'ce'},
+    :distrito_federal    => {:sigla => 'df'},
+    :espirito_santo      => {:sigla => 'es'},
+    :goias               => {:sigla => 'go'},
+    :maranhao            => {:sigla => 'ma'},
+    :minas_gerais        => {:sigla => 'mg'},
+    :mato_grosso_do_sul  => {:sigla => 'ms'},
+    :mato_grosso         => {:sigla => 'mt'},
+    :para                => {:sigla => 'pa'},
+    :paraiba             => {:sigla => 'pb'},
+    :pernambuco          => {:sigla => 'pe'},
+    :piaui               => {:sigla => 'pi'},
+    :parana              => {:sigla => 'pr'},
+    :rio_de_janeiro      => {:sigla => 'rj'},
+    :rio_grande_do_norte => {:sigla => 'rn'},
+    :rondonia            => {:sigla => 'ro'},
+    :roraima             => {:sigla => 'rr'},
+    :rio_grande_do_sul   => {:sigla => 'rs'},
+    :santa_catarina      => {:sigla => 'sc'},
+    :sergipe             => {:sigla => 'se'},
+    :sao_paulo           => {:sigla => 'sp'},
+    :tocantins           => {:sigla => 'to'}
   }
 
   class Cliente
@@ -94,7 +94,7 @@ module GuiaMais
     @@oque = ""
 
     def self.buscar(oque, params = {})
-      estado = ESTADOS[params[:estado]][:sigla] if params[:estado] || ""
+      estado = params[:estado].nil? ? "" : ESTADOS[params[:estado]][:sigla]
       resultado = get("/busca/#{CGI.escapeHTML(oque)}-#{estado}")
       @@pagina = Hpricot(resultado.body.to_utf8)
       @@oque = oque
@@ -107,31 +107,39 @@ module GuiaMais
       resultado = @@pagina.search(elemento).first
       resultado ? resultado.inner_html : nil
     end
+
+    def self.fix(str)
+      str = HTMLEntities.new.decode(str)
+      str = Iconv.conv("ISO-8859-1", "UTF-8", str)
+      str
+    end
     
     def self.minerar_dados
       nome, endereco, bairro, cep, categoria = nil
       begin
         timeout(10) do
-          nome = buscar_elemento("html/body/div[1]/div/div/div[3]/div[1]/div[1]/div[3]/div[2]/h2/a")
-          endereco = buscar_elemento("html/body/div[1]/div/div/div[3]/div[1]/div[1]/div[3]/div[2]/p[1]")
+          nome = buscar_elemento(".fn.org a")
+          endereco = buscar_elemento(".adr .street-address")
+          bairro = buscar_elemento(".adr .district")
+          cep = buscar_elemento(".adr .postal-code")
 
-          unless endereco.nil?
-            cep = endereco.slice(endereco.index("CEP:"), endereco.length)
-            cep = cep.slice(5, cep.index("<br"))
-            cep = cep.slice(0, 9)
+          # unless endereco.nil?
+          #   cep = endereco.slice(endereco.index("CEP:"), endereco.length)
+          #   cep = cep.slice(5, cep.index("<br"))
+          #   cep = cep.slice(0, 9)
 
-            endereco = endereco.slice(0, endereco.index("<br />"))
+          #   endereco = endereco.slice(0, endereco.index("<br />"))
 
-            bairro = endereco.slice(endereco.index(" - "), endereco.length)
-            endereco = endereco.slice(0, endereco.index(" - "))
-            bairro = bairro.slice(3, bairro.length)
-          end
-          categoria = buscar_elemento("html/body/div[1]/div/div/div[3]/div[1]/div[1]/div[3]/div[2]/p[2]/b")
+          #   bairro = endereco.slice(endereco.index(" - "), endereco.length)
+          #   endereco = endereco.slice(0, endereco.index(" - "))
+          #   bairro = bairro.slice(3, bairro.length)
+          # end
+          categoria = buscar_elemento(".categoria a")
 
-          nome = HTMLEntities.new.decode(nome)
-          endereco = HTMLEntities.new.decode(endereco)
-          bairro = HTMLEntities.new.decode(bairro)
-          categoria = Iconv.conv("ISO-8859-1", "UTF-8", categoria)
+          nome = fix(nome)
+          endereco = fix(endereco)
+          bairro = fix(bairro)
+          categoria = fix(categoria)
         end
       rescue TimeoutError
         raise GuiaMaisException.new, 'GuiaMais fora do ar'

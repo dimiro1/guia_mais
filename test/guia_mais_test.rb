@@ -24,8 +24,8 @@ class GuiaMaisTest < Test::Unit::TestCase
 
   def test_se_funciona_com_32222222_AP
     cliente = GuiaMais::Cliente.buscar("32222222", :estado => :amapa)
-    assert_equal "ELDORADO VEÍCULOS E PEÇAS LTDA", cliente.nome
-    assert_equal "Rod BR-156 km 3", cliente.endereco
+    assert_equal "ELDORADO VEÍCULOS E PEÇAS", cliente.nome
+    assert_equal "Rod BR-156  km 3", cliente.endereco
     assert_equal "Jardim Felicidade", cliente.bairro
     assert_equal "68909-094", cliente.cep
     assert_equal "Automóveis - Concessionárias e Serviços Autorizados", cliente.categoria
@@ -43,9 +43,9 @@ class GuiaMaisTest < Test::Unit::TestCase
   def test_se_funciona_com_32321311_PI
     cliente = GuiaMais::Cliente.buscar("21071311", :estado => :piaui)
     assert_equal "ALEMANHA VEÍCULOS", cliente.nome
-    assert_equal "Av João XXIII 3480 ", cliente.endereco
-    assert_equal "Noivos", cliente.bairro
-    assert_equal "64045-000", cliente.cep
+    assert_equal "Rod BR-343 3518 km 11", cliente.endereco
+    assert_equal "Parnaíba", cliente.bairro
+    assert_equal "64200-970", cliente.cep
     assert_equal "Automóveis - Agências e Revendedores", cliente.categoria
   end
 
