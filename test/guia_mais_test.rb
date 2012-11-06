@@ -15,8 +15,8 @@ class GuiaMaisTest < Test::Unit::TestCase
 
   def test_se_funciona_com_32222222_PI
     cliente = GuiaMais::Cliente.buscar("32222222", :estado => :piaui)
-    assert_equal "RÁDIO TÁXI", cliente.nome
-    assert_equal "R Álvaro Ferreira, 60", cliente.endereco
+    assert_equal "COOTAC - COOPERATIVA MISTA CONDUTORES AUTON VEÍCULOS PASSAGE", cliente.nome
+    assert_equal "R Álvaro Ferreira 60 ", cliente.endereco
     assert_equal "Monte Castelo", cliente.bairro
     assert_equal "64017-380", cliente.cep
     assert_equal "Táxi", cliente.categoria
@@ -37,15 +37,15 @@ class GuiaMaisTest < Test::Unit::TestCase
     assert_equal "Av Elias João Tajra, 1684", cliente.endereco
     assert_equal "Jóquei", cliente.bairro
     assert_equal "64049-300", cliente.cep
-    assert_equal "Cabeleireiros e Institutos de Beleza", cliente.categoria
+    assert_equal "Clínicas de Estética", cliente.categoria
   end
 
   def test_se_funciona_com_32321311_PI
     cliente = GuiaMais::Cliente.buscar("21071311", :estado => :piaui)
     assert_equal "ALEMANHA VEÍCULOS", cliente.nome
-    assert_equal "Rod BR-343 3518 km 11", cliente.endereco
-    assert_equal "Parnaíba", cliente.bairro
-    assert_equal "64200-970", cliente.cep
+    assert_equal "Av João XXIII 3480 ", cliente.endereco
+    assert_equal "Noivos", cliente.bairro
+    assert_equal "64045-000", cliente.cep
     assert_equal "Automóveis - Agências e Revendedores", cliente.categoria
   end
 
