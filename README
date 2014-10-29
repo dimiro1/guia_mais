@@ -1,5 +1,11 @@
 Este Projeto está abandonado.
 
+Para uma alternativa em javascript:
+-----------------------------------
+
+https://www.npmjs.org/package/guia_mais
+https://github.com/dimiro1/guia_mais_js
+
 GuiaMais v0.3.2
 
 Busca endereços no site guiamais.com.br através de mineração de dados.
